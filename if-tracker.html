@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="IF Tracker">
+  <meta name="theme-color" content="#3b82f6">
+  
+  <!-- 1. Encoded SVG Fallback -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%233b82f6'/%3E%3Ccircle cx='50' cy='52' r='30' fill='none' stroke='%23fff' stroke-width='6'/%3E%3Cline x1='50' y1='52' x2='50' y2='34' stroke='%23fff' stroke-width='5' stroke-linecap='round'/%3E%3Cline x1='50' y1='52' x2='62' y2='48' stroke='%23fff' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%233b82f6'/%3E%3Ccircle cx='50' cy='52' r='30' fill='none' stroke='%23fff' stroke-width='6'/%3E%3Cline x1='50' y1='52' x2='50' y2='34' stroke='%23fff' stroke-width='5' stroke-linecap='round'/%3E%3Cline x1='50' y1='52' x2='62' y2='48' stroke='%23fff' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="manifest" href="manifest.json">
+  
+  <title>Simple IF Tracker</title>
+  
+  <!-- 2. Guaranteed JS Canvas Favicon (Overrides if needed) -->
+  <script>
+    (function() {
+      const c = document.createElement('canvas');
+      c.width = 64; c.height = 64;
+      const ctx = c.getContext('2d');
+      // Draw gradient background
+      const g = ctx.createLinearGradient(0,0,64,64);
+      g.addColorStop(0,'#3b82f6'); g.addColorStop(1,'#10b981');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.roundRect(4,4,56,56,14); ctx.fill();
+      // Draw clock elements
+      ctx.strokeStyle='#fff'; ctx.lineWidth=4; ctx.lineCap='round';
+      ctx.beginPath(); ctx.arc(32,34,20,0,Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(32,34); ctx.lineTo(32,20); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(32,34); ctx.lineTo(42,30); ctx.stroke();
+      ctx.beginPath(); ctx.arc(32,34,3,0,Math.PI*2); ctx.fill();
+      // Apply to head
+      const link = document.querySelector('link[rel="icon"]');
+      if(link) link.href = c.toDataURL('image/png');
+      const apple = document.querySelector('link[rel="apple-touch-icon"]');
+      if(apple) apple.href = c.toDataURL('image/png');
+    })();
+  </script>
+
+  <style>
+    :root {
+      --bg: #f8f9fa; --card: #ffffff; --primary: #3b82f6; --primary-light: #93c5fd;
+      --success: #10b981; --danger: #ef4444; --text: #1f2937; --muted: #6b7280;
+      --border: #e5e7eb; --shadow: 0 8px 24px rgba(0,0,0,0.08); --surface: #f1f5f9;
+      --surface-hover: #e2e8f0; --toggle-bg: #e5e7eb; --scrollbar: #cbd5e1;
+      --water: #0ea5e9; --water-light: #7dd3fc;
+    }
+    body.dark {
+      --bg: #0f172a; --card: #1e293b; --primary: #60a5fa; --primary-light: #38bdf8;
+      --success: #34d399; --danger: #f87171; --text: #f1f5f9; --muted: #94a3b8;
+      --border: #334155; --shadow: 0 8px 24px rgba(0,0,0,0.5); --surface: #334155;
+      --surface-hover: #475569; --toggle-bg: #334155; --scrollbar: #475569;
+      --water: #38bdf8; --water-light: #0ea5e9;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
+      color: var(--text); display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; padding: 16px; transition: background 0.3s ease, color 0.3s ease;
+    }
+    .container {
+      background: var(--card); padding: 1.5rem 1.5rem 1.2rem;
+      border-radius: 20px; box-shadow: var(--shadow); width: 100%; max-width: 440px;
+      display: flex; flex-direction: column; max-height: 92vh; overflow-y: auto;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+    .container::-webkit-scrollbar { width: 0; }
+
+    .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem; }
+    .app-title { display: flex; align-items: center; gap: 10px; font-size: 1.4rem; font-weight: 600; }
+    .app-title svg { width: 24px; height: 24px; }
+    .theme-btn { background: var(--toggle-bg); border: none; border-radius: 8px; padding: 6px 8px; cursor: pointer; font-size: 1.1rem; transition: background 0.2s; }
+    .theme-btn:hover { background: var(--border); }
+    .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 1rem; text-align: center; transition: color 0.3s; }
+    .status { font-size: 1.15rem; font-weight: 600; margin-bottom: 0.15rem; transition: color 0.3s; min-height: 1.4em; text-align: center; }
+    .status.fasting { color: var(--primary); } .status.complete { color: var(--success); } .status.ready { color: var(--muted); }
+    .timer { font-size: 3.2rem; font-weight: 700; margin: 0.4rem 0 0.8rem; font-variant-numeric: tabular-nums; letter-spacing: -1px; text-align: center; }
+    .progress-wrap { position: relative; background: var(--surface); height: 14px; border-radius: 999px; margin-bottom: 0.4rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.06); overflow: hidden; transition: background 0.3s; }
+    .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--primary-light)); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s; border-radius: 999px; position: relative; }
+    .progress-bar::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 5px; background: rgba(255,255,255,0.85); border-radius: 999px; box-shadow: 0 0 8px rgba(59, 130, 246, 0.5); opacity: 0; transition: opacity 0.2s; }
+    .progress-bar.moving::after { opacity: 1; } .progress-bar.complete { background: linear-gradient(90deg, var(--success), #34d399); } .progress-bar.complete::after { display: none; }
+    .progress-markers { position: relative; height: 20px; margin-bottom: 1rem; display: flex; align-items: flex-start; }
+    .marker { position: absolute; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 1px; }
+    .marker::before { content: ''; width: 2px; height: 6px; background: var(--border); border-radius: 2px; transition: background 0.3s; }
+    .marker span { font-size: 0.65rem; color: var(--muted); font-weight: 500; transition: color 0.3s; }
+    .controls { display: flex; flex-direction: column; gap: 0.85rem; flex-shrink: 0; }
+    select, .flex-input { padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.9rem; background: var(--card); color: var(--text); cursor: pointer; width: 100%; transition: border-color 0.2s, background 0.3s, color 0.3s; }
+    select:focus, .flex-input:focus { outline: none; border-color: var(--primary); }
+    .flex-group { display: none; gap: 0.4rem; margin: 0.3rem 0; flex-direction: column; }
+    .flex-group label { font-size: 0.75rem; color: var(--muted); text-align: left; margin-left: 2px; transition: color 0.3s; }
+    .mode-toggle { display: flex; background: var(--surface); border-radius: 10px; padding: 3px; margin-top: 0.15rem; transition: background 0.3s; }
+    .mode-btn { flex: 1; padding: 8px 0; border: none; background: transparent; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; color: var(--muted); }
+    .mode-btn.active { background: var(--card); color: var(--text); box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+    button.action-btn { padding: 12px; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.1s, opacity 0.2s, background 0.3s; color: #fff; background: var(--primary); }
+    button.action-btn:active { transform: scale(0.98); } button.action-btn:hover { opacity: 0.92; } button.action-btn.end { background: var(--danger); }
+    .info { margin-top: 0.8rem; font-size: 0.75rem; color: var(--muted); line-height: 1.3; text-align: center; transition: color 0.3s; }
+
+    .toast-container { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 1000; width: 90%; max-width: 380px; pointer-events: none; }
+    .toast { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; box-shadow: var(--shadow); pointer-events: auto; transform: translateY(-20px); opacity: 0; transition: all 0.3s ease; display: flex; align-items: flex-start; gap: 10px; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast-icon { font-size: 1.2rem; margin-top: 1px; }
+    .toast-content { flex: 1; }
+    .toast-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 2px; }
+    .toast-body { font-size: 0.8rem; color: var(--muted); }
+    .toast.success .toast-icon { color: var(--success); } .toast.info .toast-icon { color: var(--primary); }
+
+    #install-prompt { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; box-shadow: var(--shadow); display: none; align-items: center; gap: 10px; z-index: 1001; font-size: 0.85rem; }
+    #install-prompt.show { display: flex; }
+    .install-btn { background: var(--primary); color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 500; }
+
+    .water-box { margin-top: 1rem; background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(59, 130, 246, 0.05)); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: background 0.3s, border-color 0.3s; }
+    .water-header { padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; transition: background 0.2s; }
+    .water-header:hover { background: var(--surface-hover); }
+    .water-header h3 { font-size: 0.95rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 6px; }
+    .water-target-row { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 0.8rem; }
+    .water-target-label { font-size: 0.8rem; color: var(--muted); }
+    .water-target-input { width: 56px; padding: 3px 6px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem; text-align: center; background: var(--card); color: var(--text); cursor: text; }
+    .water-target-input:focus { outline: none; border-color: var(--water); }
+    .water-content { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease; padding: 0 1rem; }
+    .water-content.expanded { max-height: 300px; opacity: 1; padding: 0 1rem 1rem; }
+    .water-display { text-align: center; margin-bottom: 0.8rem; }
+    .water-amount { font-size: 2rem; font-weight: 700; color: var(--water); }
+    .water-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+    .water-progress-wrap { background: var(--surface); height: 12px; border-radius: 999px; margin-bottom: 0.8rem; overflow: hidden; position: relative; }
+    .water-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--water), var(--water-light)); transition: width 0.4s ease; border-radius: 999px; }
+    .water-progress-bar.complete { background: linear-gradient(90deg, var(--success), #34d399); }
+    .water-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+    .water-btn { padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+    .water-btn:hover { background: var(--water); color: #fff; border-color: var(--water); transform: translateY(-1px); }
+    .water-btn:active { transform: translateY(0); }
+    .water-reset { margin-top: 0.6rem; text-align: center; }
+    .water-reset-btn { background: none; border: none; color: var(--muted); font-size: 0.75rem; cursor: pointer; text-decoration: underline; transition: color 0.2s; }
+    .water-reset-btn:hover { color: var(--danger); }
+
+    .history-box { margin-top: 1.2rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: background 0.3s, border-color 0.3s; }
+    .history-header { padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; transition: background 0.2s; }
+    .history-header:hover { background: var(--surface-hover); }
+    .history-header h2 { font-size: 1rem; font-weight: 600; margin: 0; }
+    .chevron { transition: transform 0.3s ease; color: var(--muted); }
+    .collapsed .chevron { transform: rotate(-90deg); }
+    .history-content { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease; padding: 0 1rem; }
+    .history-content.expanded { max-height: 800px; opacity: 1; padding: 0 1rem 1rem; }
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; margin-bottom: 1rem; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.7rem; text-align: center; transition: background 0.3s, border-color 0.3s; }
+    .stat-value { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
+    .stat-label { font-size: 0.7rem; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .history-controls { display: flex; justify-content: flex-end; gap: 0.5rem; margin-bottom: 0.8rem; }
+    .text-btn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); cursor: pointer; font-size: 0.75rem; padding: 5px 8px; transition: background 0.2s, color 0.3s; }
+    .text-btn:hover { background: var(--card); color: var(--text); }
+    .history-list { max-height: 220px; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 0.6rem; }
+    .history-list::-webkit-scrollbar { width: 5px; }
+    .history-list::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; transition: background 0.3s; }
+    .history-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem; display: grid; grid-template-columns: 1fr auto; gap: 0.4rem; align-items: start; transition: background 0.2s, border-color 0.3s, box-shadow 0.2s; }
+    .history-card:hover { background: var(--surface-hover); box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    .history-meta { font-size: 0.7rem; color: var(--muted); margin-bottom: 0.15rem; transition: color 0.3s; }
+    .history-details { font-weight: 500; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+    .history-details span { color: var(--primary); font-weight: 600; }
+    .status-badge { display: inline-block; padding: 1px 5px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.3px; }
+    .status-badge.completed { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .status-badge.cancelled { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .history-actions { display: flex; gap: 0.3rem; align-self: flex-start; }
+    .icon-btn { background: none; border: 1px solid var(--border); border-radius: 5px; padding: 4px; cursor: pointer; transition: all 0.2s; font-size: 0.8rem; }
+    .icon-btn:hover { background: var(--card); border-color: var(--muted); transform: scale(1.05); }
+    .notes-area { grid-column: 1 / -1; margin-top: 0.3rem; }
+    .notes-area label { font-size: 0.65rem; color: var(--muted); display: block; margin-bottom: 2px; transition: color 0.3s; }
+    .notes-input { width: 100%; padding: 5px 7px; border: 1px solid var(--border); border-radius: 5px; font-size: 0.8rem; background: var(--card); color: var(--text); transition: border-color 0.2s, background 0.3s, color 0.3s; }
+    .notes-input:focus { outline: none; border-color: var(--primary); }
+    .empty-state { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 1rem 0; font-style: italic; transition: color 0.3s; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="app-header">
+      <div class="app-title">
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs>
+          <circle cx="50" cy="52" r="30" stroke="var(--border)" stroke-width="6"/>
+          <path d="M50 22 A30 30 0 1 1 20 52" stroke="url(#logo-grad)" stroke-width="6" stroke-linecap="round"/>
+          <circle cx="50" cy="52" r="4" fill="url(#logo-grad)"/>
+          <line x1="50" y1="52" x2="50" y2="34" stroke="url(#logo-grad)" stroke-width="4" stroke-linecap="round"/>
+          <line x1="50" y1="52" x2="62" y2="48" stroke="url(#logo-grad)" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+        IF Tracker
+      </div>
+      <button id="theme-toggle" class="theme-btn" aria-label="Toggle theme">🌙</button>
+    </div>
+    <p class="subtitle">Stay on track with your fasting window</p>
+    <div id="status" class="status ready">Ready to Fast</div>
+    <div id="timer" class="timer">00:00:00</div>
+    <div class="progress-wrap"><div id="progress-bar" class="progress-bar"></div></div>
+    <div class="progress-markers" id="progress-markers"></div>
+
+    <div class="controls">
+      <select id="goal-select">
+        <option value="12">12:12 (Beginner)</option>
+        <option value="14">14:10 (Moderate)</option>
+        <option value="16" selected>16:8 (Popular)</option>
+        <option value="18">18:6 (Advanced)</option>
+        <option value="20">20:4 (Warrior)</option>
+        <option value="23">23:1 (OMAD)</option>
+        <option value="flex">🔧 FLEX (Custom Hours)</option>
+      </select>
+      <div class="flex-group" id="flex-group">
+        <label for="flex-hours">Fasting Hours (1–72)</label>
+        <input type="number" id="flex-hours" class="flex-input" min="1" max="72" value="24">
+      </div>
+      <div class="mode-toggle" id="mode-toggle">
+        <button class="mode-btn active" data-mode="up">Count Up</button>
+        <button class="mode-btn" data-mode="down">Count Down</button>
+      </div>
+      <button id="toggle-btn" class="action-btn">Start Fast</button>
+    </div>
+    <p class="info">Progress & settings persist across browser sessions.</p>
+
+    <div class="water-box">
+      <div class="water-header" id="water-toggle">
+        <h3>💧 Water Intake</h3>
+        <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="water-content" id="water-content">
+        <div class="water-target-row">
+          <span class="water-target-label">Target:</span>
+          <input type="number" id="water-target" class="water-target-input" min="0.5" max="10" step="0.5" value="2">
+          <span class="water-target-label">L</span>
+        </div>
+        <div class="water-display">
+          <div class="water-amount" id="water-current">0.0 L</div>
+          <div class="water-label">of <span id="water-target-display">2.0</span> L today</div>
+        </div>
+        <div class="water-progress-wrap"><div class="water-progress-bar" id="water-progress"></div></div>
+        <div class="water-buttons">
+          <button class="water-btn" data-amount="0.25">+250ml</button>
+          <button class="water-btn" data-amount="0.5">+500ml</button>
+          <button class="water-btn" data-amount="0.75">+750ml</button>
+          <button class="water-btn" data-amount="1">+1L</button>
+        </div>
+        <div class="water-reset"><button class="water-reset-btn" id="water-reset">Reset Today's Intake</button></div>
+      </div>
+    </div>
+
+    <div class="history-box">
+      <div class="history-header" id="history-toggle">
+        <h2>📜 Fasting History</h2>
+        <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="history-content" id="history-content">
+        <div class="stats-grid" id="weekly-stats"></div>
+        <div class="history-controls">
+          <button id="export-csv-btn" class="text-btn">📥 Export CSV</button>
+          <button id="clear-history" class="text-btn">🗑️ Clear All</button>
+        </div>
+        <div id="history-list" class="history-list"></div>
+        <p id="empty-history" class="empty-state">Complete your first fast to see it here.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+  <div id="install-prompt">
+    <span>📲 Install App</span>
+    <button class="install-btn" id="install-btn">Install</button>
+  </div>
+
+  <script>
+    // DOM Elements
+    const statusEl = document.getElementById('status'), timerEl = document.getElementById('timer');
+    const progressBar = document.getElementById('progress-bar'), markersContainer = document.getElementById('progress-markers');
+    const goalSelect = document.getElementById('goal-select'), toggleBtn = document.getElementById('toggle-btn');
+    const flexGroup = document.getElementById('flex-group'), flexHoursInput = document.getElementById('flex-hours');
+    const modeToggle = document.getElementById('mode-toggle'), modeButtons = modeToggle.querySelectorAll('.mode-btn');
+    const historyList = document.getElementById('history-list'), emptyHistory = document.getElementById('empty-history');
+    const clearHistoryBtn = document.getElementById('clear-history'), exportCsvBtn = document.getElementById('export-csv-btn');
+    const themeToggle = document.getElementById('theme-toggle'), historyToggle = document.getElementById('history-toggle');
+    const historyContent = document.getElementById('history-content'), weeklyStatsEl = document.getElementById('weekly-stats');
+    const waterToggle = document.getElementById('water-toggle'), waterContent = document.getElementById('water-content');
+    const waterTargetInput = document.getElementById('water-target'), waterCurrentEl = document.getElementById('water-current');
+    const waterTargetDisplayEl = document.getElementById('water-target-display'), waterProgressBar = document.getElementById('water-progress');
+    const waterResetBtn = document.getElementById('water-reset'), waterButtons = document.querySelectorAll('.water-btn');
+    const toastContainer = document.getElementById('toast-container'), installPrompt = document.getElementById('install-prompt');
+    const installBtn = document.getElementById('install-btn');
+
+    // App State
+    let isFasting = false, startTime = null, goalHours = 16, countMode = 'up', timerId = null;
+    let goalReached = false, fastLoggedToHistory = false;
+    let historyData = JSON.parse(localStorage.getItem('ifHistory') || '[]');
+    let notifFlags = { start: false, middle: false, oneHour: false, complete: false };
+    let waterData = JSON.parse(localStorage.getItem('waterData') || '{"target": 2, "current": 0, "date": null}');
+    const today = new Date().toDateString();
+
+    // Audio Engine
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const playTone = (freq, dur, type='sine', vol=0.15) => {
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = type; o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      g.gain.setValueAtTime(vol, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+      o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + dur);
+    };
+    const playSound = (type) => {
+      const t = { start: ()=>playTone(523, 0.15), mid: ()=>{playTone(440, 0.15); setTimeout(()=>playTone(554, 0.15), 150);}, hour: ()=>{playTone(587, 0.1); setTimeout(()=>playTone(587, 0.1), 100);}, complete: ()=>[523, 659, 783].forEach((f,i)=>setTimeout(()=>playTone(f, 0.2), i*150)) };
+      (t[type]||t.start)();
+    };
+
+    // Vibration
+    const vibrate = (p) => { if ('vibrate' in navigator) navigator.vibrate(p); };
+
+    // Toast + Alert
+    const showToast = (title, msg, type='info') => {
+      const t = document.createElement('div'); t.className = `toast ${type}`;
+      t.innerHTML = `<div class="toast-icon">${type==='success'?'✅':'🔔'}</div><div class="toast-content"><div class="toast-title">${title}</div><div class="toast-body">${msg}</div></div>`;
+      toastContainer.appendChild(t); requestAnimationFrame(()=>t.classList.add('show'));
+      setTimeout(()=>{t.classList.remove('show'); setTimeout(()=>t.remove(), 300);}, 4000);
+    };
+    const triggerAlert = (title, msg) => {
+      showToast(title, msg, title.includes('Complete') ? 'success' : 'info');
+      playSound(title.includes('Start') ? 'start' : title.includes('Half') ? 'mid' : title.includes('1 Hour') ? 'hour' : 'complete');
+      vibrate(title.includes('Complete') ? [200,100,200,100,300] : [100,50,100]);
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try { new Notification(title, { body: msg, icon: document.querySelector('link[rel="icon"]').href }); } catch(e){}
+      }
+    };
+
+    // Theme
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const applyTheme = (d) => { document.body.classList.toggle('dark', d); themeToggle.textContent = d ? '☀️' : '🌙'; localStorage.setItem('theme', d ? 'dark' : 'light'); };
+    applyTheme(savedTheme ? savedTheme === 'dark' : prefersDark);
+    themeToggle.addEventListener('click', () => applyTheme(!document.body.classList.contains('dark')));
+
+    // Settings & Mode
+    const savedMode = localStorage.getItem('countMode');
+    const savedFlexHours = localStorage.getItem('flexHours');
+    if (savedMode) countMode = savedMode;
+    if (savedFlexHours) flexHoursInput.value = savedFlexHours;
+    modeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === countMode));
+
+    // Notif Flags
+    const loadNotifFlags = () => { const s = localStorage.getItem('currentFastNotifs'); if(s) Object.assign(notifFlags, JSON.parse(s)); };
+    const saveNotifFlags = () => localStorage.setItem('currentFastNotifs', JSON.stringify(notifFlags));
+    const clearNotifFlags = () => { notifFlags = { start: false, middle: false, oneHour: false, complete: false }; localStorage.removeItem('currentFastNotifs'); };
+
+    // Time Helpers
+    const formatTime = (ms) => { const s=Math.floor(Math.max(0,ms)/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60; return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; };
+    const formatDuration = (ms) => { const h=Math.floor(ms/3600000), m=Math.floor((ms%3600000)/60000); return `${h}h ${m}m`; };
+    const formatDate = (ts) => new Date(ts).toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+    const renderMarkers = (totalHours) => {
+      markersContainer.innerHTML = ''; if (totalHours <= 0) return;
+      const step = totalHours <= 12 ? 2 : totalHours <= 24 ? 4 : 6;
+      for (let h = 0; h <= totalHours; h += step) {
+        const m = document.createElement('div'); m.className='marker'; m.style.left=`${(h/totalHours)*100}%`; m.innerHTML=`<span>${h}h</span>`; markersContainer.appendChild(m);
+      }
+      if (totalHours % step !== 0) {
+        const m = document.createElement('div'); m.className='marker'; m.style.left='100%'; m.innerHTML=`<span>${totalHours}h</span>`; markersContainer.appendChild(m);
+      }
+    };
+
+    const updateUI = () => {
+      if (isFasting) { statusEl.textContent = countMode==='up'?'Fasting...':'Time Remaining'; statusEl.className='status fasting'; toggleBtn.textContent='End Fast'; toggleBtn.className='action-btn end'; goalSelect.disabled=true; flexHoursInput.disabled=true; }
+      else { statusEl.textContent='Ready to Fast'; statusEl.className='status ready'; toggleBtn.textContent='Start Fast'; toggleBtn.className='action-btn'; goalSelect.disabled=false; flexHoursInput.disabled=false; }
+    };
+
+    const handleGoalChange = () => { const v=goalSelect.value; flexGroup.style.display=v==='flex'?'flex':'none'; goalHours=v==='flex'?parseInt(flexHoursInput.value,10):parseInt(v,10); renderMarkers(goalHours); if(isFasting) tick(); };
+    const handleModeChange = (mode) => { countMode=mode; localStorage.setItem('countMode', mode); modeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.mode===mode)); updateUI(); if(isFasting) tick(); };
+
+    flexHoursInput.addEventListener('input', e => { const v=Math.max(1, Math.min(72, parseInt(e.target.value)||1)); flexHoursInput.value=v; localStorage.setItem('flexHours', v); if(goalSelect.value==='flex' && isFasting) tick(); });
+    modeButtons.forEach(btn => btn.addEventListener('click', () => handleModeChange(btn.dataset.mode)));
+    goalSelect.addEventListener('change', handleGoalChange);
+
+    // Water Logic
+    const checkNewDay = () => { if(waterData.date!==today) { waterData={target:waterData.target, current:0, date:today}; saveWaterData(); } };
+    const saveWaterData = () => { localStorage.setItem('waterData', JSON.stringify(waterData)); updateWaterDisplay(); };
+    const updateWaterDisplay = () => { waterCurrentEl.textContent=`${waterData.current.toFixed(1)} L`; waterTargetDisplayEl.textContent=waterData.target.toFixed(1); waterTargetInput.value=waterData.target; const p=Math.min(100, (waterData.current/waterData.target)*100); waterProgressBar.style.width=`${p}%`; waterProgressBar.classList.toggle('complete', waterData.current>=waterData.target); };
+    const addWater = (a) => { waterData.current=Math.min(waterData.current+a, 10); saveWaterData(); };
+    const resetWater = () => { if(confirm('Reset water intake?')) { waterData.current=0; saveWaterData(); } };
+    waterTargetInput.addEventListener('change', e => { waterData.target=Math.max(0.5, Math.min(10, parseFloat(e.target.value)||2)); saveWaterData(); });
+    waterButtons.forEach(btn => btn.addEventListener('click', () => addWater(parseFloat(btn.dataset.amount))));
+    waterResetBtn.addEventListener('click', resetWater);
+
+    // Collapsible Toggles
+    const toggleSection = (h, c, k, f) => { const e=f!==undefined?f:!c.classList.contains('expanded'); c.classList.toggle('expanded', e); h.classList.toggle('collapsed', !e); localStorage.setItem(k, e); };
+    waterToggle.addEventListener('click', () => toggleSection(waterToggle, waterContent, 'waterExpanded'));
+    historyToggle.addEventListener('click', () => toggleSection(historyToggle, historyContent, 'historyExpanded'));
+
+    // History & Stats
+    const saveHistory = () => localStorage.setItem('ifHistory', JSON.stringify(historyData));
+    const renderWeeklyStats = () => {
+      const w=Date.now()-604800000, week=historyData.filter(h=>h.startTime>=w), t=week.length, hrs=week.reduce((s,h)=>s+(h.endTime-h.startTime)/3600000,0), d=week.filter(h=>h.status==='completed').length;
+      weeklyStatsEl.innerHTML=`<div class="stat-card"><div class="stat-value">${t}</div><div class="stat-label">Fasts</div></div><div class="stat-card"><div class="stat-value">${hrs.toFixed(1)}h</div><div class="stat-label">Total Time</div></div><div class="stat-card"><div class="stat-value">${t?(hrs/t).toFixed(1):0}h</div><div class="stat-label">Avg Duration</div></div><div class="stat-card"><div class="stat-value">${t?Math.round((d/t)*100):0}%</div><div class="stat-label">Completed</div></div>`;
+    };
+    const renderHistory = () => {
+      historyList.innerHTML=''; emptyHistory.style.display=historyData.length?'none':'block';
+      historyData.forEach(e => { const c=e.status==='completed', card=document.createElement('div'); card.className='history-card';
+      card.innerHTML=`<div><div class="history-meta">${formatDate(e.startTime)} • Target: ${e.targetHours}h</div><div class="history-details">Actual: <span>${formatDuration(e.endTime-e.startTime)}</span><span class="status-badge ${c?'completed':'cancelled'}">${c?'✅ DONE':'⏹️ ENDED'}</span></div><div class="notes-area"><label>Notes</label><input type="text" class="notes-input" value="${e.notes||''}" placeholder="How did it go?"></div></div><div class="history-actions"><button class="icon-btn delete-btn">🗑️</button></div>`;
+      const inp=card.querySelector('.notes-input'); inp.addEventListener('blur', ()=>{const i=historyData.findIndex(h=>h.id===e.id); if(i!==-1){historyData[i].notes=inp.value.trim(); saveHistory();}}); inp.addEventListener('keypress', ev=>ev.key==='Enter'&&inp.blur());
+      card.querySelector('.delete-btn').addEventListener('click', ()=>{if(confirm('Delete?')){historyData=historyData.filter(h=>h.id!==e.id); saveHistory(); renderHistory(); renderWeeklyStats();}}); historyList.appendChild(card); });
+    };
+    const exportToCSV = () => { if(!historyData.length) return alert('No history.'); const r=historyData.map(h=>[formatDate(h.startTime), h.targetHours, formatDuration(h.endTime-h.startTime), h.status==='completed'?'Completed':'Cancelled', `"${(h.notes||'').replace(/"/g,'""')}"`].join(',')); const b=new Blob(['\uFEFFDate,Target,Duration,Status,Notes\n'+r.join('\n')], {type:'text/csv;charset=utf-8;'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`if-history-${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(a.href); };
+    exportCsvBtn.addEventListener('click', exportToCSV);
+    clearHistoryBtn.addEventListener('click', () => { if(historyData.length && confirm('Clear all?')){historyData=[]; saveHistory(); renderHistory(); renderWeeklyStats();} });
+
+    // Timer & Notifications
+    const tick = () => {
+      if(!isFasting) return;
+      const now=Date.now(), elapsed=now-startTime, goalMs=goalHours*3600000, p=Math.min(100, (elapsed/goalMs)*100);
+      timerEl.textContent=countMode==='up'?formatTime(elapsed):formatTime(Math.max(0, goalMs-elapsed));
+      progressBar.style.width=`${p}%`; progressBar.classList.toggle('moving', p<100);
+
+      if(!notifFlags.start && elapsed>=10000) { triggerAlert('🚀 Fast Started', `Tracking ${goalHours}h. Stay strong!`); notifFlags.start=true; saveNotifFlags(); }
+      if(!notifFlags.middle && elapsed>=goalMs/2) { triggerAlert('⏳ Halfway There!', `50% of ${goalHours}h done.`); notifFlags.middle=true; saveNotifFlags(); }
+      if(goalMs>3600000 && !notifFlags.oneHour && elapsed>=goalMs-3600000) { triggerAlert('⏰ 1 Hour Left!', `Just 60m remaining.`); notifFlags.oneHour=true; saveNotifFlags(); }
+      if(!notifFlags.complete && p>=100) { triggerAlert('🎉 Fast Complete!', `You finished your ${goalHours}h fast.`); notifFlags.complete=true; saveNotifFlags(); statusEl.textContent='🎉 Fast Complete!'; statusEl.className='status complete'; goalReached=true; progressBar.classList.remove('moving'); progressBar.classList.add('complete'); timerEl.textContent=countMode==='up'?formatTime(goalMs):'00:00:00'; }
+    };
+
+    const toggleFast = async () => {
+      if(isFasting) { clearInterval(timerId); isFasting=false; goalReached=false; if(!fastLoggedToHistory && startTime) { historyData.unshift({id:Date.now()+Math.random().toString(36).substr(2,5), startTime, endTime:Date.now(), targetHours:goalHours, status:(Date.now()-startTime)>=goalHours*3600000?'completed':'cancelled', notes:''}); saveHistory(); renderHistory(); renderWeeklyStats(); } fastLoggedToHistory=true; startTime=null; localStorage.removeItem('fastStart'); clearNotifFlags(); updateUI(); timerEl.textContent='00:00:00'; progressBar.style.width='0%'; progressBar.classList.remove('complete','moving'); renderMarkers(goalHours); }
+      else { if('Notification' in window && Notification.permission==='default') await Notification.requestPermission().catch(()=>{}); goalHours=goalSelect.value==='flex'?parseInt(flexHoursInput.value,10):parseInt(goalSelect.value,10); startTime=Date.now(); goalReached=false; fastLoggedToHistory=false; clearNotifFlags(); isFasting=true; localStorage.setItem('fastStart', startTime.toString()); updateUI(); triggerAlert('🚀 Fast Started', `Tracking ${goalHours}h.`); timerId=setInterval(tick, 1000); tick(); }
+    };
+    toggleBtn.addEventListener('click', toggleFast);
+
+    // PWA Setup with Dynamic PNG Generation
+    const setupPWA = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512; canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createLinearGradient(0, 0, 512, 512);
+      grad.addColorStop(0, '#3b82f6'); grad.addColorStop(1, '#10b981');
+      ctx.fillStyle = grad;
+      const r = 100;
+      ctx.beginPath(); ctx.moveTo(r, 0); ctx.lineTo(512-r, 0); ctx.quadraticCurveTo(512, 0, 512, r);
+      ctx.lineTo(512, 512-r); ctx.quadraticCurveTo(512, 512, 512-r, 512);
+      ctx.lineTo(r, 512); ctx.quadraticCurveTo(0, 512, 0, 512-r);
+      ctx.lineTo(0, r); ctx.quadraticCurveTo(0, 0, r, 0); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.fillStyle = '#fff'; ctx.lineWidth = 24; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(256, 256, 170, 0, Math.PI * 2); ctx.lineWidth = 16; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(256, 256); ctx.lineTo(256, 140); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(256, 256); ctx.lineTo(340, 210); ctx.stroke();
+      ctx.beginPath(); ctx.arc(256, 256, 16, 0, Math.PI * 2); ctx.fill();
+      const iconData = canvas.toDataURL('image/png');
+
+      const manifest = {
+        name: "Simple IF Tracker", short_name: "IF Tracker", description: "Intermittent Fasting & Water Tracker",
+        start_url: ".", display: "standalone", background_color: "#f8f9fa", theme_color: "#3b82f6",
+        icons: [{ src: iconData, sizes: "512x512", type: "image/png", purpose: "any maskable" }]
+      };
+      const mBlob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+      document.querySelector('link[rel="manifest"]').href = URL.createObjectURL(mBlob);
+
+      const swCode = `self.addEventListener('install', e => self.skipWaiting()); self.addEventListener('activate', e => e.waitUntil(clients.claim())); self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
+      const swBlob = new Blob([swCode], {type:'application/javascript'});
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register(URL.createObjectURL(swBlob), { scope: './' }).catch(console.error);
+
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; installPrompt.classList.add('show'); });
+      installBtn.onclick = async () => {
+        if (deferredPrompt) { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') installPrompt.classList.remove('show'); deferredPrompt = null; }
+      };
+      if (window.matchMedia('(display-mode: standalone)').matches) installPrompt.style.display = 'none';
+    };
+
+    // Init
+    checkNewDay(); updateWaterDisplay();
+    toggleSection(waterToggle, waterContent, 'waterExpanded', localStorage.getItem('waterExpanded') !== 'false');
+    toggleSection(historyToggle, historyContent, 'historyExpanded', localStorage.getItem('historyExpanded') !== 'false');
+    const savedStart = localStorage.getItem('fastStart');
+    if(savedStart) { startTime=parseInt(savedStart, 10); isFasting=true; handleGoalChange(); loadNotifFlags(); updateUI(); timerId=setInterval(tick, 1000); tick(); }
+    else { handleGoalChange(); updateUI(); }
+    renderHistory(); renderWeeklyStats();
+    setupPWA();
+  </script>
+</body>
+</html>
