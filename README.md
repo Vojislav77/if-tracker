@@ -6,6 +6,12 @@ A lightweight, privacy-focused **Intermittent Fasting & Water Tracker** web app.
 [![PWA Ready](https://img.shields.io/badge/PWA-Ready-green.svg)](https://web.dev/progressive-web-apps/)
 [![Vanilla JS](https://img.shields.io/badge/JS-Vanilla-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 
+
+<img width="457" height="708" alt="001" src="https://github.com/user-attachments/assets/694fb2df-8dfd-441f-8b69-c9fec97143ea" />
+
+<img width="457" height="1173" alt="002" src="https://github.com/user-attachments/assets/a5346307-a26f-469d-848f-1dcae4a414f5" />
+
+
 ## ✨ Features
 
 * 🕒 **Smart Fasting Timer** – Count Up or Count Down with real-time progress & hour markers
