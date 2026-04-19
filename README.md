@@ -1,6 +1,6 @@
 # ⏱️ Simple IF Tracker
 
-A lightweight, privacy-focused **Intermittent Fasting & Water Tracker** web app.Zero dependencies, single-file, fully installable as a PWA, and works completely offline.
+A lightweight, privacy-focused **Intermittent Fasting & Water Tracker** web app. Zero dependencies, single-file, fully installable as a PWA, and works completely offline.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![PWA Ready](https://img.shields.io/badge/PWA-Ready-green.svg)](https://web.dev/progressive-web-apps/)
@@ -28,7 +28,7 @@ A lightweight, privacy-focused **Intermittent Fasting & Water Tracker** web app.
 
 ### ☁️ Live Demo
 
-<a href="https://github.com/vojislav77.github.io/if-tracker/if-tracker.html" target="_blank">Click here to try it live</a>
+[Click here to try it live](https://vojislav77.github.io/if-tracker/if-tracker.html)
 
 ### 📱 Install as App
 
