@@ -2,14 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="IF Tracker">
   <meta name="theme-color" content="#3b82f6">
-  
-  <!-- Favicon Generator -->
+  <title>Simple IF Tracker</title>
   <script>
+    // Generate favicon as PNG before browser requests it
     (function() {
       const c = document.createElement('canvas');
       c.width = 64; c.height = 64;
@@ -33,7 +31,6 @@
     })();
   </script>
   <link rel="manifest" href="manifest.json">
-  <title>Simple IF Tracker</title>
   <style>
     :root {
       --bg: #f8f9fa; --card: #ffffff; --primary: #3b82f6; --primary-light: #93c5fd;
@@ -53,8 +50,7 @@
     body {
       font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
       color: var(--text); padding: 16px; transition: background 0.3s ease, color 0.3s ease;
-      /* Fix for mobile: allow natural scrolling, no vh constraints */
-      min-height: 100vh; 
+      min-height: 100vh;
     }
     .container {
       background: var(--card); padding: 1.5rem;
@@ -114,7 +110,7 @@
     .toast-body { font-size: 0.8rem; color: var(--muted); }
     .toast.success .toast-icon { color: var(--success); }
 
-    /* Collapsible Sections - Simplified */
+    /* Collapsible Sections - Simple & Reliable */
     .section-box { margin-top: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
     .water-box { background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(59, 130, 246, 0.05)); }
     .section-header { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
@@ -272,8 +268,8 @@
     let isFasting = false, startTime = null, goalHours = 16, countMode = 'up', timerId = null;
     let goalReached = false, fastLoggedToHistory = false;
     let historyData = JSON.parse(localStorage.getItem('ifHistory') || '[]');
-    let notifFlags = { start: false, middle: false, oneHour: false, complete: false };
-    let waterData = JSON.parse(localStorage.getItem('waterData') || '{"target": 2, "current": 0, "date": null}');
+    let notifFlags = JSON.parse(localStorage.getItem('notifFlags') || '{"start":false,"middle":false,"oneHour":false,"complete":false}');
+    let waterData = JSON.parse(localStorage.getItem('waterData') || '{"target":2,"current":0,"date":null}');
     const today = new Date().toDateString();
 
     // --- AUDIO & NOTIFICATIONS ---
@@ -313,7 +309,7 @@
 
     // --- COLLAPSIBLE SECTIONS ---
     const toggleSection = (header, content, key) => {
-      if(document.activeElement) document.activeElement.blur();
+      if(document.activeElement && document.activeElement.tagName === 'INPUT') document.activeElement.blur();
       const isOpen = content.classList.contains('open');
       content.classList.toggle('open', !isOpen);
       header.classList.toggle('collapsed', isOpen);
@@ -377,7 +373,6 @@
 
     // --- CORE TIMER LOGIC ---
     const formatTime = (ms) => { const s=Math.floor(Math.max(0,ms)/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60; return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; };
-    const formatDuration = (ms) => { const h=Math.floor(ms/3600000), m=Math.floor((ms%3600000)/60000); return `${h}h ${m}m`; };
 
     const renderMarkers = (totalHours) => {
       markersContainer.innerHTML = ''; if (totalHours <= 0) return;
@@ -406,18 +401,17 @@
 
     const handleGoalChange = () => { 
       const v=goalSelect.value; 
-      localStorage.setItem('selectedGoal', v); // SAVE GOAL SELECTION
+      localStorage.setItem('selectedGoal', v);
       flexGroup.style.display=v==='flex'?'flex':'none'; 
       goalHours=v==='flex'?parseInt(flexHoursInput.value,10):parseInt(v,10); 
-      // Fallback if NaN
-      if(isNaN(goalHours)) goalHours = 16; 
+      if(isNaN(goalHours) || goalHours < 1) goalHours = 16; 
       renderMarkers(goalHours); 
       if(isFasting) tick(); 
     };
 
     goalSelect.addEventListener('change', handleGoalChange);
     flexHoursInput.addEventListener('input', e => { 
-      localStorage.setItem('flexHours', e.target.value); // SAVE FLEX HOURS
+      localStorage.setItem('flexHours', e.target.value);
       if(goalSelect.value==='flex' && isFasting) tick(); 
     });
 
@@ -452,9 +446,12 @@
         localStorage.setItem('notifFlags', JSON.stringify(notifFlags));
         updateUI(); timerEl.textContent='00:00:00'; progressBar.style.width='0%'; progressBar.classList.remove('complete'); renderMarkers(goalHours); 
       } else { 
-        if('Notification' in window && Notification.permission==='default') await Notification.requestPermission().catch(()=>{}); 
-        goalHours=goalSelect.value==='flex'?parseInt(flexHoursInput.value,10):parseInt(goalSelect.value,10); 
-        if(isNaN(goalHours)) goalHours = 16;
+        // Request permission without blocking
+        if('Notification' in window && Notification.permission==='default') {
+          Notification.requestPermission().catch(()=>{});
+        }
+        goalHours=goalSelect.value==='flex'?parseInt(flexHoursInput.value,10):parseInt(goalSelect.value,10);
+        if(isNaN(goalHours) || goalHours < 1) goalHours = 16;
         startTime=Date.now(); goalReached=false; fastLoggedToHistory=false; 
         notifFlags = { start: false, middle: false, oneHour: false, complete: false };
         localStorage.setItem('notifFlags', JSON.stringify(notifFlags));
@@ -473,12 +470,8 @@
     // RESTORE SETTINGS
     const savedGoal = localStorage.getItem('selectedGoal');
     const savedFlex = localStorage.getItem('flexHours');
-    const savedNotifs = localStorage.getItem('notifFlags');
-    if(savedNotifs) notifFlags = JSON.parse(savedNotifs);
     if(savedGoal) goalSelect.value = savedGoal;
     if(savedFlex) flexHoursInput.value = savedFlex;
-    
-    // UI SYNC
     handleGoalChange(); 
     
     // RESUME FAST
@@ -487,10 +480,8 @@
       startTime=parseInt(savedStart, 10); 
       isFasting=true; 
       updateUI(); 
-      // Recalculate progress immediately
       const now=Date.now(), elapsed=now-startTime, goalMs=goalHours*3600000, p=Math.min(100, (elapsed/goalMs)*100);
       if(elapsed >= goalMs && !notifFlags.complete) {
-         // Fast finished while closed
          notifFlags.complete = true;
          localStorage.setItem('notifFlags', JSON.stringify(notifFlags));
          statusEl.textContent='🎉 Fast Complete!'; statusEl.className='status complete'; 
@@ -511,7 +502,7 @@
     }
     renderHistory(); renderWeeklyStats();
     
-    // PWA Setup (Simplified)
+    // PWA Setup
     const setupPWA = () => {
       const png = window._appIconPng; if(!png) return;
       const manifest = { name: "IF Tracker", short_name: "IF", start_url: ".", display: "standalone", background_color: "#f8f9fa", theme_color: "#3b82f6", icons: [{ src: png, sizes: "64x64", type: "image/png" }] };
