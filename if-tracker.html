@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="IF Tracker">
@@ -49,20 +49,23 @@
       --water: #38bdf8; --water-light: #0ea5e9;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: auto !important;
+      min-height: 100vh;
+    }
     body {
       font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
-      color: var(--text); display: flex; justify-content: center; align-items: center;
-      min-height: 100vh; padding: 12px; transition: background 0.3s ease, color 0.3s ease;
-      overscroll-behavior: contain;
+      color: var(--text); display: flex; justify-content: center; align-items: flex-start;
+      padding: 12px; transition: background 0.3s ease, color 0.3s ease;
+      min-height: 100vh;
     }
     .container {
       background: var(--card); padding: 1.2rem 1.2rem 1rem;
       border-radius: 16px; box-shadow: var(--shadow); width: 100%; max-width: 440px;
-      display: flex; flex-direction: column; max-height: 95vh; overflow-y: auto;
+      display: flex; flex-direction: column;
       transition: background 0.3s ease, box-shadow 0.3s ease;
-      -webkit-overflow-scrolling: touch;
+      margin-bottom: 20px;
     }
-    .container::-webkit-scrollbar { width: 0; }
 
     .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem; }
     .app-title { display: flex; align-items: center; gap: 8px; font-size: 1.3rem; font-weight: 600; }
@@ -106,7 +109,7 @@
     #install-prompt.show { display: flex; }
     .install-btn { background: var(--primary); color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 0.8rem; touch-action: manipulation; }
 
-    /* COLLAPSIBLE SECTIONS - Mobile Optimized */
+    /* COLLAPSIBLE SECTIONS - Fixed for mobile browser */
     .water-box, .history-box { margin-top: 0.8rem; border-radius: 12px; overflow: hidden; transition: background 0.3s, border-color 0.3s; }
     .water-box { background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(59, 130, 246, 0.05)); border: 1px solid var(--border); }
     .history-box { background: var(--surface); border: 1px solid var(--border); }
@@ -125,20 +128,14 @@
     .section-header.collapsed .chevron { transform: rotate(-90deg); }
 
     .section-content {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease, opacity 0.25s ease;
+      display: none;
       opacity: 0;
-      will-change: max-height, opacity;
+      transition: opacity 0.25s ease;
     }
     .section-content.open {
-      max-height: 800px;
-      overflow-y: auto;
+      display: block;
       opacity: 1;
-      -webkit-overflow-scrolling: touch;
     }
-    .section-content::-webkit-scrollbar { width: 4px; }
-    .section-content::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 2px; }
 
     .water-inner { padding: 0 14px 14px; }
     .water-target-row { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-bottom: 0.7rem; }
@@ -167,7 +164,7 @@
     .history-controls { display: flex; justify-content: flex-end; gap: 0.4rem; margin-bottom: 0.7rem; }
     .text-btn { background: none; border: 1px solid var(--border); border-radius: 5px; color: var(--muted); cursor: pointer; font-size: 0.7rem; padding: 4px 7px; transition: background 0.2s, color 0.3s; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
     .text-btn:hover { background: var(--card); color: var(--text); }
-    .history-list { max-height: 200px; overflow-y: auto; padding-right: 3px; display: flex; flex-direction: column; gap: 0.5rem; }
+    .history-list { overflow-y: auto; padding-right: 3px; display: flex; flex-direction: column; gap: 0.5rem; max-height: none; }
     .history-list::-webkit-scrollbar { width: 4px; }
     .history-list::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 2px; transition: background 0.3s; }
     .history-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 0.65rem; display: grid; grid-template-columns: 1fr auto; gap: 0.3rem; align-items: start; transition: background 0.2s, border-color 0.3s, box-shadow 0.2s; }
@@ -402,11 +399,11 @@
     waterButtons.forEach(btn => btn.addEventListener('click', () => addWater(parseFloat(btn.dataset.amount))));
     waterResetBtn.addEventListener('click', resetWater);
 
-    // 🔑 BULLETPROOF MOBILE TOGGLE
+    // SIMPLE TOGGLE - No animations, just show/hide
     const toggleSection = (header, content, storageKey) => {
-      // Blur any focused element to prevent keyboard/viewport shift interference
-      if (document.activeElement) document.activeElement.blur();
-      
+      if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+        document.activeElement.blur();
+      }
       const isOpen = content.classList.contains('open');
       content.classList.toggle('open', !isOpen);
       header.classList.toggle('collapsed', isOpen);
@@ -474,7 +471,7 @@
 
     // Init
     checkNewDay(); updateWaterDisplay();
-    // Restore state without triggering animations
+    // Restore state
     if(localStorage.getItem('waterExpanded') === 'true') { waterContent.classList.add('open'); waterToggle.classList.remove('collapsed'); }
     if(localStorage.getItem('historyExpanded') === 'true') { historyContent.classList.add('open'); historyToggle.classList.remove('collapsed'); }
     
