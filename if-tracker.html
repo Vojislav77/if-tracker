@@ -8,38 +8,31 @@
   <meta name="apple-mobile-web-app-title" content="IF Tracker">
   <meta name="theme-color" content="#3b82f6">
   
-  <!-- 1. Encoded SVG Fallback -->
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%233b82f6'/%3E%3Ccircle cx='50' cy='52' r='30' fill='none' stroke='%23fff' stroke-width='6'/%3E%3Cline x1='50' y1='52' x2='50' y2='34' stroke='%23fff' stroke-width='5' stroke-linecap='round'/%3E%3Cline x1='50' y1='52' x2='62' y2='48' stroke='%23fff' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%233b82f6'/%3E%3Ccircle cx='50' cy='52' r='30' fill='none' stroke='%23fff' stroke-width='6'/%3E%3Cline x1='50' y1='52' x2='50' y2='34' stroke='%23fff' stroke-width='5' stroke-linecap='round'/%3E%3Cline x1='50' y1='52' x2='62' y2='48' stroke='%23fff' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
-  <link rel="manifest" href="manifest.json">
-  
-  <title>Simple IF Tracker</title>
-  
-  <!-- 2. Guaranteed JS Canvas Favicon (Overrides if needed) -->
   <script>
     (function() {
       const c = document.createElement('canvas');
       c.width = 64; c.height = 64;
       const ctx = c.getContext('2d');
-      // Draw gradient background
-      const g = ctx.createLinearGradient(0,0,64,64);
-      g.addColorStop(0,'#3b82f6'); g.addColorStop(1,'#10b981');
-      ctx.fillStyle = g;
-      ctx.beginPath(); ctx.roundRect(4,4,56,56,14); ctx.fill();
-      // Draw clock elements
-      ctx.strokeStyle='#fff'; ctx.lineWidth=4; ctx.lineCap='round';
-      ctx.beginPath(); ctx.arc(32,34,20,0,Math.PI*2); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(32,34); ctx.lineTo(32,20); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(32,34); ctx.lineTo(42,30); ctx.stroke();
-      ctx.beginPath(); ctx.arc(32,34,3,0,Math.PI*2); ctx.fill();
-      // Apply to head
-      const link = document.querySelector('link[rel="icon"]');
-      if(link) link.href = c.toDataURL('image/png');
-      const apple = document.querySelector('link[rel="apple-touch-icon"]');
-      if(apple) apple.href = c.toDataURL('image/png');
+      ctx.clearRect(0, 0, 64, 64);
+      const cx = 32, cy = 32, r = 22;
+      const grad = ctx.createLinearGradient(0, 0, 64, 64);
+      grad.addColorStop(0, '#3b82f6'); grad.addColorStop(1, '#10b981');
+      ctx.strokeStyle = grad; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI/2, Math.PI); ctx.stroke();
+      ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(cx, cy, 3.5, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = grad; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, cy - r + 4); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + 12, cy - 6); ctx.stroke();
+      const png = c.toDataURL('image/png');
+      ['icon', 'apple-touch-icon'].forEach(rel => {
+        const link = document.createElement('link'); link.rel = rel; link.href = png; link.type = 'image/png';
+        document.head.appendChild(link);
+      });
+      window._appIconPng = png;
     })();
   </script>
-
+  <link rel="manifest" href="manifest.json">
+  <title>Simple IF Tracker</title>
   <style>
     :root {
       --bg: #f8f9fa; --card: #ffffff; --primary: #3b82f6; --primary-light: #93c5fd;
@@ -59,116 +52,140 @@
     body {
       font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
       color: var(--text); display: flex; justify-content: center; align-items: center;
-      min-height: 100vh; padding: 16px; transition: background 0.3s ease, color 0.3s ease;
+      min-height: 100vh; padding: 12px; transition: background 0.3s ease, color 0.3s ease;
     }
     .container {
-      background: var(--card); padding: 1.5rem 1.5rem 1.2rem;
-      border-radius: 20px; box-shadow: var(--shadow); width: 100%; max-width: 440px;
-      display: flex; flex-direction: column; max-height: 92vh; overflow-y: auto;
+      background: var(--card); padding: 1.2rem 1.2rem 1rem;
+      border-radius: 16px; box-shadow: var(--shadow); width: 100%; max-width: 440px;
+      display: flex; flex-direction: column; max-height: 95vh; overflow-y: auto;
       transition: background 0.3s ease, box-shadow 0.3s ease;
     }
     .container::-webkit-scrollbar { width: 0; }
 
-    .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem; }
-    .app-title { display: flex; align-items: center; gap: 10px; font-size: 1.4rem; font-weight: 600; }
-    .app-title svg { width: 24px; height: 24px; }
-    .theme-btn { background: var(--toggle-bg); border: none; border-radius: 8px; padding: 6px 8px; cursor: pointer; font-size: 1.1rem; transition: background 0.2s; }
+    .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem; }
+    .app-title { display: flex; align-items: center; gap: 8px; font-size: 1.3rem; font-weight: 600; }
+    .app-title svg { width: 22px; height: 22px; }
+    .theme-btn { background: var(--toggle-bg); border: none; border-radius: 8px; padding: 5px 7px; cursor: pointer; font-size: 1rem; transition: background 0.2s; }
     .theme-btn:hover { background: var(--border); }
-    .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 1rem; text-align: center; transition: color 0.3s; }
-    .status { font-size: 1.15rem; font-weight: 600; margin-bottom: 0.15rem; transition: color 0.3s; min-height: 1.4em; text-align: center; }
+    .subtitle { color: var(--muted); font-size: 0.8rem; margin-bottom: 0.8rem; text-align: center; transition: color 0.3s; }
+    .status { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.1rem; transition: color 0.3s; min-height: 1.4em; text-align: center; }
     .status.fasting { color: var(--primary); } .status.complete { color: var(--success); } .status.ready { color: var(--muted); }
-    .timer { font-size: 3.2rem; font-weight: 700; margin: 0.4rem 0 0.8rem; font-variant-numeric: tabular-nums; letter-spacing: -1px; text-align: center; }
-    .progress-wrap { position: relative; background: var(--surface); height: 14px; border-radius: 999px; margin-bottom: 0.4rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.06); overflow: hidden; transition: background 0.3s; }
+    .timer { font-size: 2.8rem; font-weight: 700; margin: 0.3rem 0 0.6rem; font-variant-numeric: tabular-nums; letter-spacing: -1px; text-align: center; }
+    .progress-wrap { position: relative; background: var(--surface); height: 12px; border-radius: 999px; margin-bottom: 0.3rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.06); overflow: hidden; transition: background 0.3s; }
     .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--primary-light)); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s; border-radius: 999px; position: relative; }
-    .progress-bar::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 5px; background: rgba(255,255,255,0.85); border-radius: 999px; box-shadow: 0 0 8px rgba(59, 130, 246, 0.5); opacity: 0; transition: opacity 0.2s; }
+    .progress-bar::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 4px; background: rgba(255,255,255,0.85); border-radius: 999px; box-shadow: 0 0 8px rgba(59, 130, 246, 0.5); opacity: 0; transition: opacity 0.2s; }
     .progress-bar.moving::after { opacity: 1; } .progress-bar.complete { background: linear-gradient(90deg, var(--success), #34d399); } .progress-bar.complete::after { display: none; }
-    .progress-markers { position: relative; height: 20px; margin-bottom: 1rem; display: flex; align-items: flex-start; }
+    .progress-markers { position: relative; height: 18px; margin-bottom: 0.8rem; display: flex; align-items: flex-start; }
     .marker { position: absolute; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 1px; }
-    .marker::before { content: ''; width: 2px; height: 6px; background: var(--border); border-radius: 2px; transition: background 0.3s; }
-    .marker span { font-size: 0.65rem; color: var(--muted); font-weight: 500; transition: color 0.3s; }
-    .controls { display: flex; flex-direction: column; gap: 0.85rem; flex-shrink: 0; }
-    select, .flex-input { padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.9rem; background: var(--card); color: var(--text); cursor: pointer; width: 100%; transition: border-color 0.2s, background 0.3s, color 0.3s; }
+    .marker::before { content: ''; width: 2px; height: 5px; background: var(--border); border-radius: 2px; transition: background 0.3s; }
+    .marker span { font-size: 0.6rem; color: var(--muted); font-weight: 500; transition: color 0.3s; }
+    .controls { display: flex; flex-direction: column; gap: 0.7rem; flex-shrink: 0; }
+    select, .flex-input { padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.85rem; background: var(--card); color: var(--text); cursor: pointer; width: 100%; transition: border-color 0.2s, background 0.3s, color 0.3s; }
     select:focus, .flex-input:focus { outline: none; border-color: var(--primary); }
-    .flex-group { display: none; gap: 0.4rem; margin: 0.3rem 0; flex-direction: column; }
-    .flex-group label { font-size: 0.75rem; color: var(--muted); text-align: left; margin-left: 2px; transition: color 0.3s; }
-    .mode-toggle { display: flex; background: var(--surface); border-radius: 10px; padding: 3px; margin-top: 0.15rem; transition: background 0.3s; }
-    .mode-btn { flex: 1; padding: 8px 0; border: none; background: transparent; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; color: var(--muted); }
+    .flex-group { display: none; gap: 0.3rem; margin: 0.2rem 0; flex-direction: column; }
+    .flex-group label { font-size: 0.7rem; color: var(--muted); text-align: left; margin-left: 2px; transition: color 0.3s; }
+    .mode-toggle { display: flex; background: var(--surface); border-radius: 8px; padding: 2px; margin-top: 0.1rem; transition: background 0.3s; }
+    .mode-btn { flex: 1; padding: 7px 0; border: none; background: transparent; border-radius: 7px; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; color: var(--muted); }
     .mode-btn.active { background: var(--card); color: var(--text); box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
-    button.action-btn { padding: 12px; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.1s, opacity 0.2s, background 0.3s; color: #fff; background: var(--primary); }
+    button.action-btn { padding: 11px; border: none; border-radius: 9px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: transform 0.1s, opacity 0.2s, background 0.3s; color: #fff; background: var(--primary); }
     button.action-btn:active { transform: scale(0.98); } button.action-btn:hover { opacity: 0.92; } button.action-btn.end { background: var(--danger); }
-    .info { margin-top: 0.8rem; font-size: 0.75rem; color: var(--muted); line-height: 1.3; text-align: center; transition: color 0.3s; }
+    .info { margin-top: 0.6rem; font-size: 0.7rem; color: var(--muted); line-height: 1.3; text-align: center; transition: color 0.3s; }
 
-    .toast-container { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 1000; width: 90%; max-width: 380px; pointer-events: none; }
-    .toast { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; box-shadow: var(--shadow); pointer-events: auto; transform: translateY(-20px); opacity: 0; transition: all 0.3s ease; display: flex; align-items: flex-start; gap: 10px; }
+    .toast-container { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 1000; width: 90%; max-width: 340px; pointer-events: none; }
+    .toast { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow); pointer-events: auto; transform: translateY(-20px); opacity: 0; transition: all 0.3s ease; display: flex; align-items: flex-start; gap: 8px; }
     .toast.show { transform: translateY(0); opacity: 1; }
-    .toast-icon { font-size: 1.2rem; margin-top: 1px; }
+    .toast-icon { font-size: 1.1rem; margin-top: 1px; }
     .toast-content { flex: 1; }
-    .toast-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 2px; }
-    .toast-body { font-size: 0.8rem; color: var(--muted); }
+    .toast-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 2px; }
+    .toast-body { font-size: 0.75rem; color: var(--muted); }
     .toast.success .toast-icon { color: var(--success); } .toast.info .toast-icon { color: var(--primary); }
 
-    #install-prompt { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; box-shadow: var(--shadow); display: none; align-items: center; gap: 10px; z-index: 1001; font-size: 0.85rem; }
+    #install-prompt { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; box-shadow: var(--shadow); display: none; align-items: center; gap: 8px; z-index: 1001; font-size: 0.8rem; }
     #install-prompt.show { display: flex; }
-    .install-btn { background: var(--primary); color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 500; }
+    .install-btn { background: var(--primary); color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 0.8rem; }
 
-    .water-box { margin-top: 1rem; background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(59, 130, 246, 0.05)); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: background 0.3s, border-color 0.3s; }
-    .water-header { padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; transition: background 0.2s; }
+    .water-box { margin-top: 0.8rem; background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(59, 130, 246, 0.05)); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: background 0.3s, border-color 0.3s; }
+    .water-header { padding: 0.75rem 0.9rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; transition: background 0.2s; }
     .water-header:hover { background: var(--surface-hover); }
-    .water-header h3 { font-size: 0.95rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 6px; }
-    .water-target-row { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 0.8rem; }
-    .water-target-label { font-size: 0.8rem; color: var(--muted); }
-    .water-target-input { width: 56px; padding: 3px 6px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem; text-align: center; background: var(--card); color: var(--text); cursor: text; }
+    .water-header h3 { font-size: 0.9rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 5px; }
+    .water-target-row { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-bottom: 0.7rem; }
+    .water-target-label { font-size: 0.75rem; color: var(--muted); }
+    .water-target-input { width: 50px; padding: 2px 5px; border: 1px solid var(--border); border-radius: 5px; font-size: 0.75rem; text-align: center; background: var(--card); color: var(--text); cursor: text; }
     .water-target-input:focus { outline: none; border-color: var(--water); }
-    .water-content { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease; padding: 0 1rem; }
-    .water-content.expanded { max-height: 300px; opacity: 1; padding: 0 1rem 1rem; }
-    .water-display { text-align: center; margin-bottom: 0.8rem; }
-    .water-amount { font-size: 2rem; font-weight: 700; color: var(--water); }
-    .water-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
-    .water-progress-wrap { background: var(--surface); height: 12px; border-radius: 999px; margin-bottom: 0.8rem; overflow: hidden; position: relative; }
+    .water-content { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.5s ease, opacity 0.4s ease, padding 0.4s ease; padding: 0 0.9rem; }
+    .water-content.expanded { 
+      max-height: 500px; 
+      opacity: 1; 
+      padding: 0 0.9rem 0.9rem;
+      overflow-y: auto;
+    }
+    .water-content::-webkit-scrollbar { width: 4px; }
+    .water-content::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 2px; }
+    .water-display { text-align: center; margin-bottom: 0.7rem; }
+    .water-amount { font-size: 1.8rem; font-weight: 700; color: var(--water); }
+    .water-label { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+    .water-progress-wrap { background: var(--surface); height: 10px; border-radius: 999px; margin-bottom: 0.7rem; overflow: hidden; position: relative; }
     .water-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--water), var(--water-light)); transition: width 0.4s ease; border-radius: 999px; }
     .water-progress-bar.complete { background: linear-gradient(90deg, var(--success), #34d399); }
-    .water-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
-    .water-btn { padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+    .water-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; }
+    .water-btn { padding: 7px; border: 1px solid var(--border); border-radius: 7px; background: var(--card); color: var(--text); font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
     .water-btn:hover { background: var(--water); color: #fff; border-color: var(--water); transform: translateY(-1px); }
     .water-btn:active { transform: translateY(0); }
-    .water-reset { margin-top: 0.6rem; text-align: center; }
-    .water-reset-btn { background: none; border: none; color: var(--muted); font-size: 0.75rem; cursor: pointer; text-decoration: underline; transition: color 0.2s; }
+    .water-reset { margin-top: 0.5rem; text-align: center; }
+    .water-reset-btn { background: none; border: none; color: var(--muted); font-size: 0.7rem; cursor: pointer; text-decoration: underline; transition: color 0.2s; }
     .water-reset-btn:hover { color: var(--danger); }
 
-    .history-box { margin-top: 1.2rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: background 0.3s, border-color 0.3s; }
-    .history-header { padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; transition: background 0.2s; }
+    .history-box { margin-top: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: background 0.3s, border-color 0.3s; }
+    .history-header { padding: 0.75rem 0.9rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; transition: background 0.2s; }
     .history-header:hover { background: var(--surface-hover); }
-    .history-header h2 { font-size: 1rem; font-weight: 600; margin: 0; }
+    .history-header h2 { font-size: 0.95rem; font-weight: 600; margin: 0; }
     .chevron { transition: transform 0.3s ease; color: var(--muted); }
     .collapsed .chevron { transform: rotate(-90deg); }
-    .history-content { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease; padding: 0 1rem; }
-    .history-content.expanded { max-height: 800px; opacity: 1; padding: 0 1rem 1rem; }
-    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; margin-bottom: 1rem; }
-    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.7rem; text-align: center; transition: background 0.3s, border-color 0.3s; }
-    .stat-value { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
-    .stat-label { font-size: 0.7rem; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .history-controls { display: flex; justify-content: flex-end; gap: 0.5rem; margin-bottom: 0.8rem; }
-    .text-btn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); cursor: pointer; font-size: 0.75rem; padding: 5px 8px; transition: background 0.2s, color 0.3s; }
+    .history-content { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.5s ease, opacity 0.4s ease, padding 0.4s ease; padding: 0 0.9rem; }
+    .history-content.expanded { 
+      max-height: 600px; 
+      opacity: 1; 
+      padding: 0 0.9rem 0.9rem;
+      overflow-y: auto;
+    }
+    .history-content::-webkit-scrollbar { width: 4px; }
+    .history-content::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 2px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-bottom: 0.8rem; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem; text-align: center; transition: background 0.3s, border-color 0.3s; }
+    .stat-value { font-size: 1rem; font-weight: 700; color: var(--primary); }
+    .stat-label { font-size: 0.65rem; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .history-controls { display: flex; justify-content: flex-end; gap: 0.4rem; margin-bottom: 0.7rem; }
+    .text-btn { background: none; border: 1px solid var(--border); border-radius: 5px; color: var(--muted); cursor: pointer; font-size: 0.7rem; padding: 4px 7px; transition: background 0.2s, color 0.3s; }
     .text-btn:hover { background: var(--card); color: var(--text); }
-    .history-list { max-height: 220px; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 0.6rem; }
-    .history-list::-webkit-scrollbar { width: 5px; }
-    .history-list::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; transition: background 0.3s; }
-    .history-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem; display: grid; grid-template-columns: 1fr auto; gap: 0.4rem; align-items: start; transition: background 0.2s, border-color 0.3s, box-shadow 0.2s; }
+    .history-list { max-height: 200px; overflow-y: auto; padding-right: 3px; display: flex; flex-direction: column; gap: 0.5rem; }
+    .history-list::-webkit-scrollbar { width: 4px; }
+    .history-list::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 2px; transition: background 0.3s; }
+    .history-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 0.65rem; display: grid; grid-template-columns: 1fr auto; gap: 0.3rem; align-items: start; transition: background 0.2s, border-color 0.3s, box-shadow 0.2s; }
     .history-card:hover { background: var(--surface-hover); box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-    .history-meta { font-size: 0.7rem; color: var(--muted); margin-bottom: 0.15rem; transition: color 0.3s; }
-    .history-details { font-weight: 500; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+    .history-meta { font-size: 0.65rem; color: var(--muted); margin-bottom: 0.1rem; transition: color 0.3s; }
+    .history-details { font-weight: 500; font-size: 0.8rem; display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
     .history-details span { color: var(--primary); font-weight: 600; }
-    .status-badge { display: inline-block; padding: 1px 5px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.3px; }
+    .status-badge { display: inline-block; padding: 1px 4px; border-radius: 3px; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.3px; }
     .status-badge.completed { background: rgba(16, 185, 129, 0.15); color: var(--success); }
     .status-badge.cancelled { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
-    .history-actions { display: flex; gap: 0.3rem; align-self: flex-start; }
-    .icon-btn { background: none; border: 1px solid var(--border); border-radius: 5px; padding: 4px; cursor: pointer; transition: all 0.2s; font-size: 0.8rem; }
+    .history-actions { display: flex; gap: 0.2rem; align-self: flex-start; }
+    .icon-btn { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 3px; cursor: pointer; transition: all 0.2s; font-size: 0.75rem; }
     .icon-btn:hover { background: var(--card); border-color: var(--muted); transform: scale(1.05); }
-    .notes-area { grid-column: 1 / -1; margin-top: 0.3rem; }
-    .notes-area label { font-size: 0.65rem; color: var(--muted); display: block; margin-bottom: 2px; transition: color 0.3s; }
-    .notes-input { width: 100%; padding: 5px 7px; border: 1px solid var(--border); border-radius: 5px; font-size: 0.8rem; background: var(--card); color: var(--text); transition: border-color 0.2s, background 0.3s, color 0.3s; }
+    .notes-area { grid-column: 1 / -1; margin-top: 0.2rem; }
+    .notes-area label { font-size: 0.6rem; color: var(--muted); display: block; margin-bottom: 2px; transition: color 0.3s; }
+    .notes-input { width: 100%; padding: 4px 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.75rem; background: var(--card); color: var(--text); transition: border-color 0.2s, background 0.3s, color 0.3s; }
     .notes-input:focus { outline: none; border-color: var(--primary); }
-    .empty-state { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 1rem 0; font-style: italic; transition: color 0.3s; }
+    .empty-state { text-align: center; color: var(--muted); font-size: 0.8rem; padding: 0.8rem 0; font-style: italic; transition: color 0.3s; }
+
+    /* Mobile optimizations */
+    @media (max-width: 480px) {
+      body { padding: 8px; }
+      .container { padding: 1rem 1rem 0.8rem; border-radius: 14px; }
+      .timer { font-size: 2.4rem; }
+      .water-amount { font-size: 1.6rem; }
+      .water-buttons { grid-template-columns: repeat(2, 1fr); }
+      .stats-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -176,12 +193,11 @@
     <div class="app-header">
       <div class="app-title">
         <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs><linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs>
-          <circle cx="50" cy="52" r="30" stroke="var(--border)" stroke-width="6"/>
-          <path d="M50 22 A30 30 0 1 1 20 52" stroke="url(#logo-grad)" stroke-width="6" stroke-linecap="round"/>
-          <circle cx="50" cy="52" r="4" fill="url(#logo-grad)"/>
-          <line x1="50" y1="52" x2="50" y2="34" stroke="url(#logo-grad)" stroke-width="4" stroke-linecap="round"/>
-          <line x1="50" y1="52" x2="62" y2="48" stroke="url(#logo-grad)" stroke-width="4" stroke-linecap="round"/>
+          <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#10b981"/></linearGradient></defs>
+          <circle cx="50" cy="50" r="36" fill="none" stroke="url(#logo-grad)" stroke-width="5" stroke-linecap="round" stroke-dasharray="170 226" transform="rotate(-90 50 50)"/>
+          <circle cx="50" cy="50" r="4" fill="url(#logo-grad)"/>
+          <line x1="50" y1="50" x2="50" y2="24" stroke="url(#logo-grad)" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="50" y1="50" x2="64" y2="44" stroke="url(#logo-grad)" stroke-width="3.5" stroke-linecap="round"/>
         </svg>
         IF Tracker
       </div>
@@ -218,7 +234,7 @@
     <div class="water-box">
       <div class="water-header" id="water-toggle">
         <h3>💧 Water Intake</h3>
-        <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
       </div>
       <div class="water-content" id="water-content">
         <div class="water-target-row">
@@ -244,7 +260,7 @@
     <div class="history-box">
       <div class="history-header" id="history-toggle">
         <h2>📜 Fasting History</h2>
-        <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
       </div>
       <div class="history-content" id="history-content">
         <div class="stats-grid" id="weekly-stats"></div>
@@ -265,7 +281,6 @@
   </div>
 
   <script>
-    // DOM Elements
     const statusEl = document.getElementById('status'), timerEl = document.getElementById('timer');
     const progressBar = document.getElementById('progress-bar'), markersContainer = document.getElementById('progress-markers');
     const goalSelect = document.getElementById('goal-select'), toggleBtn = document.getElementById('toggle-btn');
@@ -282,7 +297,6 @@
     const toastContainer = document.getElementById('toast-container'), installPrompt = document.getElementById('install-prompt');
     const installBtn = document.getElementById('install-btn');
 
-    // App State
     let isFasting = false, startTime = null, goalHours = 16, countMode = 'up', timerId = null;
     let goalReached = false, fastLoggedToHistory = false;
     let historyData = JSON.parse(localStorage.getItem('ifHistory') || '[]');
@@ -290,7 +304,6 @@
     let waterData = JSON.parse(localStorage.getItem('waterData') || '{"target": 2, "current": 0, "date": null}');
     const today = new Date().toDateString();
 
-    // Audio Engine
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const playTone = (freq, dur, type='sine', vol=0.15) => {
       if(audioCtx.state === 'suspended') audioCtx.resume();
@@ -305,10 +318,8 @@
       (t[type]||t.start)();
     };
 
-    // Vibration
     const vibrate = (p) => { if ('vibrate' in navigator) navigator.vibrate(p); };
 
-    // Toast + Alert
     const showToast = (title, msg, type='info') => {
       const t = document.createElement('div'); t.className = `toast ${type}`;
       t.innerHTML = `<div class="toast-icon">${type==='success'?'✅':'🔔'}</div><div class="toast-content"><div class="toast-title">${title}</div><div class="toast-body">${msg}</div></div>`;
@@ -320,30 +331,26 @@
       playSound(title.includes('Start') ? 'start' : title.includes('Half') ? 'mid' : title.includes('1 Hour') ? 'hour' : 'complete');
       vibrate(title.includes('Complete') ? [200,100,200,100,300] : [100,50,100]);
       if ('Notification' in window && Notification.permission === 'granted') {
-        try { new Notification(title, { body: msg, icon: document.querySelector('link[rel="icon"]').href }); } catch(e){}
+        try { new Notification(title, { body: msg, icon: window._appIconPng || '' }); } catch(e){}
       }
     };
 
-    // Theme
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const applyTheme = (d) => { document.body.classList.toggle('dark', d); themeToggle.textContent = d ? '☀️' : '🌙'; localStorage.setItem('theme', d ? 'dark' : 'light'); };
     applyTheme(savedTheme ? savedTheme === 'dark' : prefersDark);
     themeToggle.addEventListener('click', () => applyTheme(!document.body.classList.contains('dark')));
 
-    // Settings & Mode
     const savedMode = localStorage.getItem('countMode');
     const savedFlexHours = localStorage.getItem('flexHours');
     if (savedMode) countMode = savedMode;
     if (savedFlexHours) flexHoursInput.value = savedFlexHours;
     modeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === countMode));
 
-    // Notif Flags
     const loadNotifFlags = () => { const s = localStorage.getItem('currentFastNotifs'); if(s) Object.assign(notifFlags, JSON.parse(s)); };
     const saveNotifFlags = () => localStorage.setItem('currentFastNotifs', JSON.stringify(notifFlags));
     const clearNotifFlags = () => { notifFlags = { start: false, middle: false, oneHour: false, complete: false }; localStorage.removeItem('currentFastNotifs'); };
 
-    // Time Helpers
     const formatTime = (ms) => { const s=Math.floor(Math.max(0,ms)/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60; return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; };
     const formatDuration = (ms) => { const h=Math.floor(ms/3600000), m=Math.floor((ms%3600000)/60000); return `${h}h ${m}m`; };
     const formatDate = (ts) => new Date(ts).toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
@@ -371,7 +378,6 @@
     modeButtons.forEach(btn => btn.addEventListener('click', () => handleModeChange(btn.dataset.mode)));
     goalSelect.addEventListener('change', handleGoalChange);
 
-    // Water Logic
     const checkNewDay = () => { if(waterData.date!==today) { waterData={target:waterData.target, current:0, date:today}; saveWaterData(); } };
     const saveWaterData = () => { localStorage.setItem('waterData', JSON.stringify(waterData)); updateWaterDisplay(); };
     const updateWaterDisplay = () => { waterCurrentEl.textContent=`${waterData.current.toFixed(1)} L`; waterTargetDisplayEl.textContent=waterData.target.toFixed(1); waterTargetInput.value=waterData.target; const p=Math.min(100, (waterData.current/waterData.target)*100); waterProgressBar.style.width=`${p}%`; waterProgressBar.classList.toggle('complete', waterData.current>=waterData.target); };
@@ -381,12 +387,19 @@
     waterButtons.forEach(btn => btn.addEventListener('click', () => addWater(parseFloat(btn.dataset.amount))));
     waterResetBtn.addEventListener('click', resetWater);
 
-    // Collapsible Toggles
-    const toggleSection = (h, c, k, f) => { const e=f!==undefined?f:!c.classList.contains('expanded'); c.classList.toggle('expanded', e); h.classList.toggle('collapsed', !e); localStorage.setItem(k, e); };
+    const toggleSection = (h, c, k, f) => { 
+      const e=f!==undefined?f:!c.classList.contains('expanded'); 
+      c.classList.toggle('expanded', e); 
+      h.classList.toggle('collapsed', !e); 
+      localStorage.setItem(k, e);
+      // Scroll into view if expanded on mobile
+      if (e && window.innerWidth < 600) {
+        setTimeout(() => c.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 300);
+      }
+    };
     waterToggle.addEventListener('click', () => toggleSection(waterToggle, waterContent, 'waterExpanded'));
     historyToggle.addEventListener('click', () => toggleSection(historyToggle, historyContent, 'historyExpanded'));
 
-    // History & Stats
     const saveHistory = () => localStorage.setItem('ifHistory', JSON.stringify(historyData));
     const renderWeeklyStats = () => {
       const w=Date.now()-604800000, week=historyData.filter(h=>h.startTime>=w), t=week.length, hrs=week.reduce((s,h)=>s+(h.endTime-h.startTime)/3600000,0), d=week.filter(h=>h.status==='completed').length;
@@ -403,7 +416,6 @@
     exportCsvBtn.addEventListener('click', exportToCSV);
     clearHistoryBtn.addEventListener('click', () => { if(historyData.length && confirm('Clear all?')){historyData=[]; saveHistory(); renderHistory(); renderWeeklyStats();} });
 
-    // Timer & Notifications
     const tick = () => {
       if(!isFasting) return;
       const now=Date.now(), elapsed=now-startTime, goalMs=goalHours*3600000, p=Math.min(100, (elapsed/goalMs)*100);
@@ -422,30 +434,13 @@
     };
     toggleBtn.addEventListener('click', toggleFast);
 
-    // PWA Setup with Dynamic PNG Generation
     const setupPWA = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 512; canvas.height = 512;
-      const ctx = canvas.getContext('2d');
-      const grad = ctx.createLinearGradient(0, 0, 512, 512);
-      grad.addColorStop(0, '#3b82f6'); grad.addColorStop(1, '#10b981');
-      ctx.fillStyle = grad;
-      const r = 100;
-      ctx.beginPath(); ctx.moveTo(r, 0); ctx.lineTo(512-r, 0); ctx.quadraticCurveTo(512, 0, 512, r);
-      ctx.lineTo(512, 512-r); ctx.quadraticCurveTo(512, 512, 512-r, 512);
-      ctx.lineTo(r, 512); ctx.quadraticCurveTo(0, 512, 0, 512-r);
-      ctx.lineTo(0, r); ctx.quadraticCurveTo(0, 0, r, 0); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = '#fff'; ctx.fillStyle = '#fff'; ctx.lineWidth = 24; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.arc(256, 256, 170, 0, Math.PI * 2); ctx.lineWidth = 16; ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(256, 256); ctx.lineTo(256, 140); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(256, 256); ctx.lineTo(340, 210); ctx.stroke();
-      ctx.beginPath(); ctx.arc(256, 256, 16, 0, Math.PI * 2); ctx.fill();
-      const iconData = canvas.toDataURL('image/png');
-
+      const png = window._appIconPng;
+      if (!png) return;
       const manifest = {
         name: "Simple IF Tracker", short_name: "IF Tracker", description: "Intermittent Fasting & Water Tracker",
         start_url: ".", display: "standalone", background_color: "#f8f9fa", theme_color: "#3b82f6",
-        icons: [{ src: iconData, sizes: "512x512", type: "image/png", purpose: "any maskable" }]
+        icons: [{ src: png, sizes: "64x64", type: "image/png", purpose: "any maskable" }]
       };
       const mBlob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
       document.querySelector('link[rel="manifest"]').href = URL.createObjectURL(mBlob);
@@ -462,7 +457,6 @@
       if (window.matchMedia('(display-mode: standalone)').matches) installPrompt.style.display = 'none';
     };
 
-    // Init
     checkNewDay(); updateWaterDisplay();
     toggleSection(waterToggle, waterContent, 'waterExpanded', localStorage.getItem('waterExpanded') !== 'false');
     toggleSection(historyToggle, historyContent, 'historyExpanded', localStorage.getItem('historyExpanded') !== 'false');
