@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="IF Tracker">
@@ -53,19 +53,21 @@
       font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
       color: var(--text); display: flex; justify-content: center; align-items: center;
       min-height: 100vh; padding: 12px; transition: background 0.3s ease, color 0.3s ease;
+      overscroll-behavior: contain;
     }
     .container {
       background: var(--card); padding: 1.2rem 1.2rem 1rem;
       border-radius: 16px; box-shadow: var(--shadow); width: 100%; max-width: 440px;
       display: flex; flex-direction: column; max-height: 95vh; overflow-y: auto;
       transition: background 0.3s ease, box-shadow 0.3s ease;
+      -webkit-overflow-scrolling: touch;
     }
     .container::-webkit-scrollbar { width: 0; }
 
     .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem; }
     .app-title { display: flex; align-items: center; gap: 8px; font-size: 1.3rem; font-weight: 600; }
     .app-title svg { width: 22px; height: 22px; }
-    .theme-btn { background: var(--toggle-bg); border: none; border-radius: 8px; padding: 5px 7px; cursor: pointer; font-size: 1rem; transition: background 0.2s; }
+    .theme-btn { background: var(--toggle-bg); border: none; border-radius: 8px; padding: 5px 7px; cursor: pointer; font-size: 1rem; transition: background 0.2s; touch-action: manipulation; }
     .theme-btn:hover { background: var(--border); }
     .subtitle { color: var(--muted); font-size: 0.8rem; margin-bottom: 0.8rem; text-align: center; transition: color 0.3s; }
     .status { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.1rem; transition: color 0.3s; min-height: 1.4em; text-align: center; }
@@ -80,14 +82,14 @@
     .marker::before { content: ''; width: 2px; height: 5px; background: var(--border); border-radius: 2px; transition: background 0.3s; }
     .marker span { font-size: 0.6rem; color: var(--muted); font-weight: 500; transition: color 0.3s; }
     .controls { display: flex; flex-direction: column; gap: 0.7rem; flex-shrink: 0; }
-    select, .flex-input { padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.85rem; background: var(--card); color: var(--text); cursor: pointer; width: 100%; transition: border-color 0.2s, background 0.3s, color 0.3s; }
+    select, .flex-input { padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.85rem; background: var(--card); color: var(--text); cursor: pointer; width: 100%; transition: border-color 0.2s, background 0.3s, color 0.3s; touch-action: manipulation; }
     select:focus, .flex-input:focus { outline: none; border-color: var(--primary); }
     .flex-group { display: none; gap: 0.3rem; margin: 0.2rem 0; flex-direction: column; }
     .flex-group label { font-size: 0.7rem; color: var(--muted); text-align: left; margin-left: 2px; transition: color 0.3s; }
     .mode-toggle { display: flex; background: var(--surface); border-radius: 8px; padding: 2px; margin-top: 0.1rem; transition: background 0.3s; }
-    .mode-btn { flex: 1; padding: 7px 0; border: none; background: transparent; border-radius: 7px; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; color: var(--muted); }
+    .mode-btn { flex: 1; padding: 7px 0; border: none; background: transparent; border-radius: 7px; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; color: var(--muted); touch-action: manipulation; }
     .mode-btn.active { background: var(--card); color: var(--text); box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
-    button.action-btn { padding: 11px; border: none; border-radius: 9px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: transform 0.1s, opacity 0.2s, background 0.3s; color: #fff; background: var(--primary); }
+    button.action-btn { padding: 11px; border: none; border-radius: 9px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: transform 0.1s, opacity 0.2s, background 0.3s; color: #fff; background: var(--primary); touch-action: manipulation; }
     button.action-btn:active { transform: scale(0.98); } button.action-btn:hover { opacity: 0.92; } button.action-btn.end { background: var(--danger); }
     .info { margin-top: 0.6rem; font-size: 0.7rem; color: var(--muted); line-height: 1.3; text-align: center; transition: color 0.3s; }
 
@@ -102,25 +104,47 @@
 
     #install-prompt { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; box-shadow: var(--shadow); display: none; align-items: center; gap: 8px; z-index: 1001; font-size: 0.8rem; }
     #install-prompt.show { display: flex; }
-    .install-btn { background: var(--primary); color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 0.8rem; }
+    .install-btn { background: var(--primary); color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 0.8rem; touch-action: manipulation; }
 
-    .water-box { margin-top: 0.8rem; background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(59, 130, 246, 0.05)); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: background 0.3s, border-color 0.3s; }
-    .water-header { padding: 0.75rem 0.9rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; transition: background 0.2s; }
-    .water-header:hover { background: var(--surface-hover); }
-    .water-header h3 { font-size: 0.9rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 5px; }
+    /* COLLAPSIBLE SECTIONS - Mobile Optimized */
+    .water-box, .history-box { margin-top: 0.8rem; border-radius: 12px; overflow: hidden; transition: background 0.3s, border-color 0.3s; }
+    .water-box { background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(59, 130, 246, 0.05)); border: 1px solid var(--border); }
+    .history-box { background: var(--surface); border: 1px solid var(--border); }
+    
+    .section-header {
+      padding: 12px 14px;
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; user-select: none; transition: background 0.2s;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      position: relative; z-index: 10;
+    }
+    .section-header:hover, .section-header:active { background: var(--surface-hover); }
+    .section-header h3, .section-header h2 { font-size: 0.9rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 5px; }
+    .chevron { transition: transform 0.25s ease; color: var(--muted); flex-shrink: 0; }
+    .section-header.collapsed .chevron { transform: rotate(-90deg); }
+
+    .section-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.25s ease;
+      opacity: 0;
+      will-change: max-height, opacity;
+    }
+    .section-content.open {
+      max-height: 800px;
+      overflow-y: auto;
+      opacity: 1;
+      -webkit-overflow-scrolling: touch;
+    }
+    .section-content::-webkit-scrollbar { width: 4px; }
+    .section-content::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 2px; }
+
+    .water-inner { padding: 0 14px 14px; }
     .water-target-row { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-bottom: 0.7rem; }
     .water-target-label { font-size: 0.75rem; color: var(--muted); }
-    .water-target-input { width: 50px; padding: 2px 5px; border: 1px solid var(--border); border-radius: 5px; font-size: 0.75rem; text-align: center; background: var(--card); color: var(--text); cursor: text; }
+    .water-target-input { width: 50px; padding: 2px 5px; border: 1px solid var(--border); border-radius: 5px; font-size: 0.75rem; text-align: center; background: var(--card); color: var(--text); cursor: text; touch-action: manipulation; }
     .water-target-input:focus { outline: none; border-color: var(--water); }
-    .water-content { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.5s ease, opacity 0.4s ease, padding 0.4s ease; padding: 0 0.9rem; }
-    .water-content.expanded { 
-      max-height: 500px; 
-      opacity: 1; 
-      padding: 0 0.9rem 0.9rem;
-      overflow-y: auto;
-    }
-    .water-content::-webkit-scrollbar { width: 4px; }
-    .water-content::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 2px; }
     .water-display { text-align: center; margin-bottom: 0.7rem; }
     .water-amount { font-size: 1.8rem; font-weight: 700; color: var(--water); }
     .water-label { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
@@ -128,34 +152,20 @@
     .water-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--water), var(--water-light)); transition: width 0.4s ease; border-radius: 999px; }
     .water-progress-bar.complete { background: linear-gradient(90deg, var(--success), #34d399); }
     .water-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; }
-    .water-btn { padding: 7px; border: 1px solid var(--border); border-radius: 7px; background: var(--card); color: var(--text); font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+    .water-btn { padding: 7px; border: 1px solid var(--border); border-radius: 7px; background: var(--card); color: var(--text); font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
     .water-btn:hover { background: var(--water); color: #fff; border-color: var(--water); transform: translateY(-1px); }
     .water-btn:active { transform: translateY(0); }
     .water-reset { margin-top: 0.5rem; text-align: center; }
-    .water-reset-btn { background: none; border: none; color: var(--muted); font-size: 0.7rem; cursor: pointer; text-decoration: underline; transition: color 0.2s; }
+    .water-reset-btn { background: none; border: none; color: var(--muted); font-size: 0.7rem; cursor: pointer; text-decoration: underline; transition: color 0.2s; touch-action: manipulation; }
     .water-reset-btn:hover { color: var(--danger); }
 
-    .history-box { margin-top: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: background 0.3s, border-color 0.3s; }
-    .history-header { padding: 0.75rem 0.9rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; transition: background 0.2s; }
-    .history-header:hover { background: var(--surface-hover); }
-    .history-header h2 { font-size: 0.95rem; font-weight: 600; margin: 0; }
-    .chevron { transition: transform 0.3s ease; color: var(--muted); }
-    .collapsed .chevron { transform: rotate(-90deg); }
-    .history-content { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.5s ease, opacity 0.4s ease, padding 0.4s ease; padding: 0 0.9rem; }
-    .history-content.expanded { 
-      max-height: 600px; 
-      opacity: 1; 
-      padding: 0 0.9rem 0.9rem;
-      overflow-y: auto;
-    }
-    .history-content::-webkit-scrollbar { width: 4px; }
-    .history-content::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 2px; }
+    .history-inner { padding: 0 14px 14px; }
     .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-bottom: 0.8rem; }
     .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem; text-align: center; transition: background 0.3s, border-color 0.3s; }
     .stat-value { font-size: 1rem; font-weight: 700; color: var(--primary); }
     .stat-label { font-size: 0.65rem; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
     .history-controls { display: flex; justify-content: flex-end; gap: 0.4rem; margin-bottom: 0.7rem; }
-    .text-btn { background: none; border: 1px solid var(--border); border-radius: 5px; color: var(--muted); cursor: pointer; font-size: 0.7rem; padding: 4px 7px; transition: background 0.2s, color 0.3s; }
+    .text-btn { background: none; border: 1px solid var(--border); border-radius: 5px; color: var(--muted); cursor: pointer; font-size: 0.7rem; padding: 4px 7px; transition: background 0.2s, color 0.3s; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
     .text-btn:hover { background: var(--card); color: var(--text); }
     .history-list { max-height: 200px; overflow-y: auto; padding-right: 3px; display: flex; flex-direction: column; gap: 0.5rem; }
     .history-list::-webkit-scrollbar { width: 4px; }
@@ -169,18 +179,17 @@
     .status-badge.completed { background: rgba(16, 185, 129, 0.15); color: var(--success); }
     .status-badge.cancelled { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
     .history-actions { display: flex; gap: 0.2rem; align-self: flex-start; }
-    .icon-btn { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 3px; cursor: pointer; transition: all 0.2s; font-size: 0.75rem; }
+    .icon-btn { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 3px; cursor: pointer; transition: all 0.2s; font-size: 0.75rem; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
     .icon-btn:hover { background: var(--card); border-color: var(--muted); transform: scale(1.05); }
     .notes-area { grid-column: 1 / -1; margin-top: 0.2rem; }
     .notes-area label { font-size: 0.6rem; color: var(--muted); display: block; margin-bottom: 2px; transition: color 0.3s; }
-    .notes-input { width: 100%; padding: 4px 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.75rem; background: var(--card); color: var(--text); transition: border-color 0.2s, background 0.3s, color 0.3s; }
+    .notes-input { width: 100%; padding: 4px 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.75rem; background: var(--card); color: var(--text); transition: border-color 0.2s, background 0.3s, color 0.3s; touch-action: manipulation; }
     .notes-input:focus { outline: none; border-color: var(--primary); }
     .empty-state { text-align: center; color: var(--muted); font-size: 0.8rem; padding: 0.8rem 0; font-style: italic; transition: color 0.3s; }
 
-    /* Mobile optimizations */
     @media (max-width: 480px) {
       body { padding: 8px; }
-      .container { padding: 1rem 1rem 0.8rem; border-radius: 14px; }
+      .container { padding: 1rem; border-radius: 14px; }
       .timer { font-size: 2.4rem; }
       .water-amount { font-size: 1.6rem; }
       .water-buttons { grid-template-columns: repeat(2, 1fr); }
@@ -231,45 +240,51 @@
     </div>
     <p class="info">Progress & settings persist across browser sessions.</p>
 
+    <!-- Water Section -->
     <div class="water-box">
-      <div class="water-header" id="water-toggle">
+      <div class="section-header collapsed" id="water-toggle">
         <h3>💧 Water Intake</h3>
         <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
       </div>
-      <div class="water-content" id="water-content">
-        <div class="water-target-row">
-          <span class="water-target-label">Target:</span>
-          <input type="number" id="water-target" class="water-target-input" min="0.5" max="10" step="0.5" value="2">
-          <span class="water-target-label">L</span>
+      <div class="section-content" id="water-content">
+        <div class="water-inner">
+          <div class="water-target-row">
+            <span class="water-target-label">Target:</span>
+            <input type="number" id="water-target" class="water-target-input" min="0.5" max="10" step="0.5" value="2">
+            <span class="water-target-label">L</span>
+          </div>
+          <div class="water-display">
+            <div class="water-amount" id="water-current">0.0 L</div>
+            <div class="water-label">of <span id="water-target-display">2.0</span> L today</div>
+          </div>
+          <div class="water-progress-wrap"><div class="water-progress-bar" id="water-progress"></div></div>
+          <div class="water-buttons">
+            <button class="water-btn" data-amount="0.25">+250ml</button>
+            <button class="water-btn" data-amount="0.5">+500ml</button>
+            <button class="water-btn" data-amount="0.75">+750ml</button>
+            <button class="water-btn" data-amount="1">+1L</button>
+          </div>
+          <div class="water-reset"><button class="water-reset-btn" id="water-reset">Reset Today's Intake</button></div>
         </div>
-        <div class="water-display">
-          <div class="water-amount" id="water-current">0.0 L</div>
-          <div class="water-label">of <span id="water-target-display">2.0</span> L today</div>
-        </div>
-        <div class="water-progress-wrap"><div class="water-progress-bar" id="water-progress"></div></div>
-        <div class="water-buttons">
-          <button class="water-btn" data-amount="0.25">+250ml</button>
-          <button class="water-btn" data-amount="0.5">+500ml</button>
-          <button class="water-btn" data-amount="0.75">+750ml</button>
-          <button class="water-btn" data-amount="1">+1L</button>
-        </div>
-        <div class="water-reset"><button class="water-reset-btn" id="water-reset">Reset Today's Intake</button></div>
       </div>
     </div>
 
+    <!-- History Section -->
     <div class="history-box">
-      <div class="history-header" id="history-toggle">
+      <div class="section-header collapsed" id="history-toggle">
         <h2>📜 Fasting History</h2>
         <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
       </div>
-      <div class="history-content" id="history-content">
-        <div class="stats-grid" id="weekly-stats"></div>
-        <div class="history-controls">
-          <button id="export-csv-btn" class="text-btn">📥 Export CSV</button>
-          <button id="clear-history" class="text-btn">🗑️ Clear All</button>
+      <div class="section-content" id="history-content">
+        <div class="history-inner">
+          <div class="stats-grid" id="weekly-stats"></div>
+          <div class="history-controls">
+            <button id="export-csv-btn" class="text-btn">📥 Export CSV</button>
+            <button id="clear-history" class="text-btn">🗑️ Clear All</button>
+          </div>
+          <div id="history-list" class="history-list"></div>
+          <p id="empty-history" class="empty-state">Complete your first fast to see it here.</p>
         </div>
-        <div id="history-list" class="history-list"></div>
-        <p id="empty-history" class="empty-state">Complete your first fast to see it here.</p>
       </div>
     </div>
   </div>
@@ -387,18 +402,18 @@
     waterButtons.forEach(btn => btn.addEventListener('click', () => addWater(parseFloat(btn.dataset.amount))));
     waterResetBtn.addEventListener('click', resetWater);
 
-    const toggleSection = (h, c, k, f) => { 
-      const e=f!==undefined?f:!c.classList.contains('expanded'); 
-      c.classList.toggle('expanded', e); 
-      h.classList.toggle('collapsed', !e); 
-      localStorage.setItem(k, e);
-      // Scroll into view if expanded on mobile
-      if (e && window.innerWidth < 600) {
-        setTimeout(() => c.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 300);
-      }
+    // 🔑 BULLETPROOF MOBILE TOGGLE
+    const toggleSection = (header, content, storageKey) => {
+      // Blur any focused element to prevent keyboard/viewport shift interference
+      if (document.activeElement) document.activeElement.blur();
+      
+      const isOpen = content.classList.contains('open');
+      content.classList.toggle('open', !isOpen);
+      header.classList.toggle('collapsed', isOpen);
+      localStorage.setItem(storageKey, !isOpen);
     };
-    waterToggle.addEventListener('click', () => toggleSection(waterToggle, waterContent, 'waterExpanded'));
-    historyToggle.addEventListener('click', () => toggleSection(historyToggle, historyContent, 'historyExpanded'));
+    waterToggle.addEventListener('click', (e) => { e.preventDefault(); toggleSection(waterToggle, waterContent, 'waterExpanded'); });
+    historyToggle.addEventListener('click', (e) => { e.preventDefault(); toggleSection(historyToggle, historyContent, 'historyExpanded'); });
 
     const saveHistory = () => localStorage.setItem('ifHistory', JSON.stringify(historyData));
     const renderWeeklyStats = () => {
@@ -457,9 +472,12 @@
       if (window.matchMedia('(display-mode: standalone)').matches) installPrompt.style.display = 'none';
     };
 
+    // Init
     checkNewDay(); updateWaterDisplay();
-    toggleSection(waterToggle, waterContent, 'waterExpanded', localStorage.getItem('waterExpanded') !== 'false');
-    toggleSection(historyToggle, historyContent, 'historyExpanded', localStorage.getItem('historyExpanded') !== 'false');
+    // Restore state without triggering animations
+    if(localStorage.getItem('waterExpanded') === 'true') { waterContent.classList.add('open'); waterToggle.classList.remove('collapsed'); }
+    if(localStorage.getItem('historyExpanded') === 'true') { historyContent.classList.add('open'); historyToggle.classList.remove('collapsed'); }
+    
     const savedStart = localStorage.getItem('fastStart');
     if(savedStart) { startTime=parseInt(savedStart, 10); isFasting=true; handleGoalChange(); loadNotifFlags(); updateUI(); timerId=setInterval(tick, 1000); tick(); }
     else { handleGoalChange(); updateUI(); }
