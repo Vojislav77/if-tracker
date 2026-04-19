@@ -2,9 +2,9 @@
 
 A lightweight, privacy-focused **Intermittent Fasting & Water Tracker** web app.Zero dependencies, single-file, fully installable as a PWA, and works completely offline.
 
-[![License MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![PWA Ready](https://img.shields.io/badge/PWA-Ready-green.svg)](https://web.dev/progressive-web-apps/)
-[![Vanilla JS](https://img.shields.io/badge/JS-Vanilla-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![PWA Ready](https://img.shields.io/badge/PWA-Ready-green.svg)](https://web.dev/progressive-web-apps/)
+[![Vanilla JS](https://img.shields.io/badge/JS-Vanilla-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 
 ## ✨ Features
 
