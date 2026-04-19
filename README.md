@@ -28,7 +28,7 @@ A lightweight, privacy-focused **Intermittent Fasting & Water Tracker** web app.
 
 ### ☁️ Live Demo
 
-<a href="vojislav77.github.io/if-tracker/if-tracker.html" target="_blank">Click here to try it live</a>
+<a href="https://github.com/vojislav77.github.io/if-tracker/if-tracker.html" target="_blank">Click here to try it live</a>
 
 ### 📱 Install as App
 
